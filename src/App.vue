@@ -2,9 +2,26 @@
   <div :class="['container', theme]">
     <h1>Ultimate Tic Tac Toe Pro</h1>
 
+    <!-- MODE SELECTION -->
+    <div class="mode-selection">
+      <button 
+        :class="{active: gameMode==='ai'}"
+        @click="setMode('ai')">
+        🤖 Player vs AI
+      </button>
+
+      <button 
+        :class="{active: gameMode==='two'}"
+        @click="setMode('two')">
+        👥 Player vs Player
+      </button>
+    </div>
+
     <!-- SETTINGS -->
     <div class="settings">
-      <select v-model="difficulty">
+
+      <!-- Difficulty only for AI -->
+      <select v-if="gameMode==='ai'" v-model="difficulty">
         <option value="easy">Easy</option>
         <option value="medium">Medium</option>
         <option value="hard">Hard</option>
@@ -68,6 +85,7 @@ export default {
       winner:null,
       difficulty:"hard",
       aiThinking:false,
+      gameMode:"ai",   // 🔥 NEW
       theme: localStorage.getItem("theme") || "blue",
       stats: JSON.parse(localStorage.getItem("stats")) || {
         total:0,xWins:0,oWins:0,draws:0
@@ -87,6 +105,12 @@ export default {
   },
 
   methods:{
+
+    setMode(mode){
+      this.gameMode = mode;
+      this.resetGame();
+    },
+
     toggleTheme(){
       if(this.theme==="blue") this.theme="neon";
       else if(this.theme==="neon") this.theme="light";
@@ -110,12 +134,20 @@ export default {
       this.board[index]=this.currentPlayer;
       this.redoStack=[];
       this.checkWinner();
+
       this.currentPlayer=this.currentPlayer==="X"?"O":"X";
 
-      if(this.currentPlayer==="O" && !this.winner){
+      // 🔥 AI Only If AI Mode
+      if(
+        this.gameMode==="ai" &&
+        this.currentPlayer==="O" &&
+        !this.winner
+      ){
         this.aiThinking=true;
+
         setTimeout(()=>{
           let move;
+
           if(this.difficulty==="easy")
             move=this.getRandomMove();
           else
@@ -143,7 +175,9 @@ export default {
     },
 
     getRandomMove(){
-      const empty=this.board.map((v,i)=>v===""?i:null).filter(v=>v!==null);
+      const empty=this.board
+        .map((v,i)=>v===""?i:null)
+        .filter(v=>v!==null);
       return empty[Math.floor(Math.random()*empty.length)];
     },
 
@@ -246,38 +280,35 @@ export default {
   transition:0.3s;
 }
 
-/* BLUE THEME */
-.blue{
-  background:#f4f9ff;
-  color:#1e293b;
-}
-.blue .cell{
-  background:#dbeafe;
-  border:2px solid #93c5fd;
+.mode-selection{
+  margin:15px 0;
 }
 
-/* LIGHT THEME */
-.light{
-  background:#ffffff;
-  color:#222;
-}
-.light .cell{
-  background:#e5e7eb;
-  border:2px solid #cbd5e1;
+.mode-selection button{
+  margin:5px;
+  padding:8px 15px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:bold;
 }
 
-/* NEON THEME */
-.neon{
-  background:#0f172a;
-  color:#00ffff;
+.mode-selection button.active{
+  background:#2563eb;
+  color:white;
 }
+
+.blue{ background:#f4f9ff; color:#1e293b; }
+.blue .cell{ background:#dbeafe; border:2px solid #93c5fd; }
+
+.light{ background:#ffffff; color:#222; }
+.light .cell{ background:#e5e7eb; border:2px solid #cbd5e1; }
+
+.neon{ background:#0f172a; color:#00ffff; }
 .neon .cell{
   background:#111827;
   border:2px solid #00ffff;
   box-shadow:0 0 10px #00ffff;
-}
-.neon .cell:hover{
-  box-shadow:0 0 20px #00ffff;
 }
 
 .board{
@@ -298,15 +329,6 @@ export default {
   transition:0.3s;
 }
 
-.controls button{
-  margin:5px;
-}
-
-.dashboard{
-  margin-top:20px;
-}
-
-@media(max-width:500px){
-  .board{max-width:280px;}
-}
+.controls button{ margin:5px; }
+.dashboard{ margin-top:20px; }
 </style>
